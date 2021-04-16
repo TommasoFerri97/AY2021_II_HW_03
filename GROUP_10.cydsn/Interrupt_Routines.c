@@ -20,18 +20,63 @@ int32 value_digit;
 CY_ISR(Custom_ISR_ADC)
 {
     TIMER_ReadStatusRegister();
-    if (flagPacketReady == 0)
+    if (flagPacketReady == 0) // Serve per evitare di campionare mentre stiamo inviando? 
     {
+        switch (SlaveBuffer[0]){
+            
+        case _5_SAMPLES_ON_LDR: LED_Write(0);
+                                ADC_DelSig_AMux_FastSelect(AMUX_PHOTO); // usiamo il fast?
+                                //ADC_DelSig_StartConvert();
+                                value_digit= ADC_DelSig_Read32();
+                                //ADC_DelSig_StopConvert();
+                                if(value_digit < 0) value_digit = 0;
+                                if(value_digit > 65535) value_digit = 35535 ;
+                                PHOTO_Array[flag] = ADC_DelSig_CountsTo_mVolts(value_digit);
+                                flag++;
+                                break;
+                                
+        case _5_SAMPLES_ON_TMP: LED_Write(0);
+                                ADC_DelSig_AMux_FastSelect(AMUX_TMP);
+                                //ADC_DelSig_StartConvert();
+                                value_digit= ADC_DelSig_Read32();
+                                //ADC_DelSig_StopConvert();
+                                if(value_digit < 0) value_digit = 0;
+                                if(value_digit > 65535) value_digit = 35535 ;
+                                PHOTO_Array[flag] = ADC_DelSig_CountsTo_mVolts(value_digit);
+                                flag++;
+                                break;
+                                
+        case _5_SAMPLES_ON_BOTH:
+                                LED_Write(1);
+                                ADC_DelSig_AMux_FastSelect(AMUX_PHOTO);
+                                //ADC_DelSig_StartConvert();
+                                value_digit= ADC_DelSig_Read32();
+                                //ADC_DelSig_StopConvert();
+                                if(value_digit < 0) value_digit = 0;
+                                if(value_digit > 65535) value_digit = 35535 ;
+                                PHOTO_Array[flag] = ADC_DelSig_CountsTo_mVolts(value_digit);
+                                
+                                
+                                ADC_DelSig_AMux_FastSelect(AMUX_TMP);
+                                //ADC_DelSig_StartConvert();
+                                value_digit= ADC_DelSig_Read32();
+                                //ADC_DelSig_StopConvert();
+                                if(value_digit < 0) value_digit = 0;
+                                if(value_digit > 65535) value_digit = 35535 ;
+                                TMP_Array[flag] = ADC_DelSig_CountsTo_mVolts(value_digit);
+                                flag++;
+                                break;
+        default : break;
         
+        }
+        
+        if (flag ==5) flagPacketReady = 1; //ridondante: la doppia flag è utile solo se usiamo periodo < 4ms (da decidere, magari è meglio perchè così siamo un po' tirati)
+        
+        /*
         ADC_DelSig_AMux_FastSelect(AMUX_PHOTO);
         //ADC_DelSig_StartConvert();
-        /*PHOTO_Array[flag] = ADC_DelSig_Read32();
-        if (PHOTO_Array[flag] < 0) PHOTO_Array[flag] =0;
-        if (PHOTO_Array[flag] > 65535) PHOTO_Array[flag] =65535;
-        PHOTO_Array[flag] = ADC_DelSig_CountsTo_mVolts(PHOTO_Array[flag]);
-        */
         value_digit= ADC_DelSig_Read32();
-        //ADC_DelSig_StopConvert();//binary value
+        //ADC_DelSig_StopConvert();
         if(value_digit < 0) value_digit = 0;
         if(value_digit > 65535) value_digit = 35535 ;
         PHOTO_Array[flag] = ADC_DelSig_CountsTo_mVolts(value_digit);
@@ -39,16 +84,12 @@ CY_ISR(Custom_ISR_ADC)
         
         ADC_DelSig_AMux_FastSelect(AMUX_TMP);
         //ADC_DelSig_StartConvert();
-        /*TMP_Array[flag] = ADC_DelSig_Read32();
-        if (TMP_Array[flag] < 0) TMP_Array[flag] =0;
-        if (TMP_Array[flag] > 65535) TMP_Array[flag] =65535;
-        TMP_Array[flag] = ADC_DelSig_CountsTo_mVolts(TMP_Array[flag]);*/
         value_digit= ADC_DelSig_Read32();
         //ADC_DelSig_StopConvert();
         if(value_digit < 0) value_digit = 0;
         if(value_digit > 65535) value_digit = 35535 ;
         TMP_Array[flag] = ADC_DelSig_CountsTo_mVolts(value_digit);
-        flag++;
+        flag++;*/
     }
     
 }
