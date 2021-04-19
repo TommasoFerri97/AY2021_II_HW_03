@@ -12,7 +12,7 @@
 #include "project.h"
 #include "Interrupt_Routines.h"
 #include "I2C_Interface.h"
-
+#include "math.h"
 /*STRUTTURA SLAVEBUFFER 
 0x00	Control Reg 1	R/W
 0x01	Control Reg 2	R/W
@@ -26,9 +26,9 @@
 volatile uint8_t SlaveBuffer[SLAVE_BUFFER_SIZE] = {0};
 
 int i;
-int64 sum_PHOTO,sum_TMP; // 32? Bisogna controllare i casi limite con rischio overflow 
+int32 sum_PHOTO,sum_TMP; // 32? Bisogna controllare i casi limite con rischio overflow 
 uint16_t mean_PHOTO,mean_TMP;
-
+uint16_t R_PHOTO;
 int main(void)
 {
 
@@ -71,7 +71,7 @@ int main(void)
                 
                 case STATUS_ON_PHOTO: 
                                         {sum_PHOTO += sample(AMUX_PHOTO); 
-                                       
+                                        
                                         
                                         break;}
                                         
@@ -83,8 +83,8 @@ int main(void)
                                         
                 case STATUS_ON_BOTH:
                                         {sum_PHOTO += sample(AMUX_PHOTO); 
-
                                          sum_TMP += sample(AMUX_TMP);
+                                        
                                          break;}
                 default : break;
                 }
@@ -92,9 +92,12 @@ int main(void)
  
             
         if (counter == ITS_TIME_TO_SEND){
-            
-                mean_PHOTO = sum_PHOTO/SAMPLES; 
-                mean_TMP = sum_TMP/SAMPLES;
+                //sum_PHOTO =  ADC_DelSig_CountsTo_mVolts(sum_PHOTO); 
+                //sum_TMP =  ADC_DelSig_CountsTo_mVolts(sum_TMP);
+                //R_PHOTO = (5000*10 - ((sum_PHOTO/SAMPLES)*10*5000)/131072)/((sum_PHOTO/SAMPLES)*5000)/131072;
+                //mean_PHOTO = (pow(R_PHOTO,-10))/100.01 ; 
+                mean_PHOTO = (sum_PHOTO/SAMPLES)*5000/65536;
+                mean_TMP = (((sum_TMP/SAMPLES)*5000)/(65536)-500)/10;
                 
                 // byte SPLIT
                 SlaveBuffer[3] = mean_PHOTO >>8;    //HBYTES
@@ -106,9 +109,10 @@ int main(void)
                 counter=0;
                 sum_PHOTO = 0;
                 sum_TMP = 0;
+                mean_PHOTO = 0;
+                mean_TMP=0;
         }
-        
-   
+
         
 
     }
