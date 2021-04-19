@@ -10,7 +10,7 @@
  * ========================================
 */
 #include "Interrupt_Routines.h"
-#include "I2C_interface.h"
+#include "I2C_Interface.h"
 
 void turn_off (){
 
@@ -33,10 +33,13 @@ void turn_on (){
     // PHOTO and TMP Array non resettati, tanto verranno sovrascritti
 }
 
-uint32_t sample(uint8_t AMUX) {
+int32_t sample(uint8_t AMUX) {
     
-    ADC_DelSig_AMux_Select(AMUX); 
-    uint16_t value_digit= ADC_DelSig_Read32();
+    ADC_DelSig_StopConvert();
+    AMux_1_FastSelect(AMUX);
+    ADC_DelSig_StartConvert();
+    ADC_DelSig_Read32(); //trash
+    value_digit = ADC_DelSig_Read32();
     if(value_digit < 0) value_digit = 0;
     if(value_digit > 65535) value_digit = 65535 ;
     

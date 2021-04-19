@@ -19,13 +19,13 @@
     #define AMUX_PHOTO       0
     #define AMUX_TMP         1
     #define PACKET_READY     5
-    #define ITS_TIME_TO_SEND 10 // IF PERIOD 2MS
+    #define ITS_TIME_TO_SEND 5   // 5 IF PERIOD 4MS
+    #define MASK             0b00000011
     
     //volatile uint8_t flagPacketReady;
     volatile uint8_t flag;
     volatile uint8_t counter;
-    volatile uint8_t status;
-    
+    volatile uint8_t status,previous_status;
     CY_ISR_PROTO(Custom_ISR_ADC);
     
 

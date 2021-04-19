@@ -37,11 +37,12 @@
     
     uint16_t TMP_Array[SAMPLES];
     uint16_t PHOTO_Array[SAMPLES];
+    int32 value_digit;
     
     //funzione per fermare lo stream di dati e resettare flags
     void turn_off(void);
     void turn_on(void);
-    uint32_t sample (uint8_t AMUX);
+    int32_t sample (uint8_t AMUX);
     
 #endif
 /* [] END OF FILE */
