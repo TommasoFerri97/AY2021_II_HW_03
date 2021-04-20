@@ -17,18 +17,18 @@
 0x00	Control Reg 1	R/W
 0x01	Control Reg 2	R/W
 0x02	Who Am I	    R
-0x03	PHOTO Bit 15-8	R
-0x04	PHOTO Bit 07-0	R
-0x05	TMP Bit 15-8	R
-0x06	TMP Bit 07-0	R
+0x03	TMP Bit 15-8	R
+0x04	TMP Bit 07-0	R
+0x05	PHOTO Bit 15-8	R
+0x06	PHOTO Bit 07-0	R
 */
 
 volatile uint8_t SlaveBuffer[SLAVE_BUFFER_SIZE] = {0};
 
-int i;
-int32 sum_PHOTO,sum_TMP; // 32? Bisogna controllare i casi limite con rischio overflow 
 uint16_t mean_PHOTO,mean_TMP;
 uint16_t R_PHOTO;
+
+
 int main(void)
 {
 
@@ -63,47 +63,22 @@ int main(void)
     for(;;)
     
     {  
-        
-        if (flag ==1 ){  
-               
-                switch (status){
-                
-                
-                case STATUS_ON_PHOTO: 
-                                        {sum_PHOTO += sample(AMUX_PHOTO); 
-                                        
-                                        
-                                        break;}
-                                        
-                                        
-                case STATUS_ON_TMP:     
-                                        {sum_TMP += sample(AMUX_TMP);
-                                        
-                                        break;}
-                                        
-                case STATUS_ON_BOTH:
-                                        {sum_PHOTO += sample(AMUX_PHOTO); 
-                                         sum_TMP += sample(AMUX_TMP);
-                                        
-                                         break;}
-                default : break;
-                }
-        }
- 
-            
+       
         if (counter == ITS_TIME_TO_SEND){
                 //sum_PHOTO =  ADC_DelSig_CountsTo_mVolts(sum_PHOTO); 
                 //sum_TMP =  ADC_DelSig_CountsTo_mVolts(sum_TMP);
-                //R_PHOTO = (5000*10 - ((sum_PHOTO/SAMPLES)*10*5000)/131072)/((sum_PHOTO/SAMPLES)*5000)/131072;
-                //mean_PHOTO = (pow(R_PHOTO,-10))/100.01 ; 
+                /*R_PHOTO = (5000*10 - ((sum_PHOTO/SAMPLES)*10*5000)/131072)/((sum_PHOTO/SAMPLES)*5000)/131072;
+                mean_PHOTO = (pow(R_PHOTO,-10))/100.01 ; 
                 mean_PHOTO = (sum_PHOTO/SAMPLES)*5000/65536;
-                mean_TMP = (((sum_TMP/SAMPLES)*5000)/(65536)-500)/10;
-                
+                mean_TMP = (((sum_TMP/SAMPLES)*5000)/(65536)-500)/10;*/
+            
+                mean_PHOTO = sum_PHOTO/SAMPLES;
+                mean_TMP = sum_TMP/SAMPLES;
                 // byte SPLIT
-                SlaveBuffer[3] = mean_PHOTO >>8;    //HBYTES
-                SlaveBuffer[4] = mean_PHOTO & 0xFF; //LBYTES
-                SlaveBuffer[5] = mean_TMP >>8;
-                SlaveBuffer[6] = mean_TMP & 0xFF;
+                SlaveBuffer[3] = mean_TMP >>8;
+                SlaveBuffer[4] = mean_TMP & 0xFF;
+                SlaveBuffer[5] = mean_PHOTO >>8;    //HBYTES
+                SlaveBuffer[6] = mean_PHOTO & 0xFF; //LBYTES
                 
                 flag=0;
                 counter=0;

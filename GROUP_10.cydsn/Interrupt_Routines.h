@@ -16,8 +16,8 @@
     
     #define LED_OFF          0
     #define LED_ON           1
-    #define AMUX_PHOTO       0
-    #define AMUX_TMP         1
+    #define AMUX_PHOTO       1
+    #define AMUX_TMP         0
     #define PACKET_READY     5
     #define ITS_TIME_TO_SEND 5   // 5 IF PERIOD 4MS
     #define MASK             0b00000011

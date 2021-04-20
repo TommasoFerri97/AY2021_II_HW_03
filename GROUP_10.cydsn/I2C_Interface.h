@@ -39,9 +39,13 @@
     uint16_t PHOTO_Array[SAMPLES];
     int32 value_digit;
     
+    volatile int32 sum_PHOTO,sum_TMP; 
+    
     //funzione per fermare lo stream di dati e resettare flags
     void turn_off(void);
     void turn_on(void);
+    
+    //function which samples the channel AMUX
     int32_t sample (uint8_t AMUX);
     
 #endif

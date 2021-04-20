@@ -16,15 +16,37 @@
 
 CY_ISR(Custom_ISR_ADC)
 {
-    TIMER_ReadStatusRegister();
+    TIMER_ReadStatusRegister();  //per ora usiamo solo counter come variabile non più flag. Può tornare utile se riduciamo i 4ms
     
-    //status = (SlaveBuffer[0] & MASK);
-
-    flag =1;
+    
     counter++;
-    //if (status != STATUS_OFF) counter++; //Conto solo se non sono spento(serve se l'isr la lasciamo sempre attiva) il counter ora è a 2ms
-
+    
+     
+                switch (status){
+                
+                
+                case STATUS_ON_PHOTO: 
+                                        {sum_PHOTO += sample(AMUX_PHOTO); 
+                                        
+                                        
+                                        break;}
+                                        
+                                        
+                case STATUS_ON_TMP:     
+                                        {sum_TMP += sample(AMUX_TMP);
+                                        
+                                        break;}
+                                        
+                case STATUS_ON_BOTH:
+                                        {sum_PHOTO += sample(AMUX_PHOTO); 
+                                         sum_TMP += sample(AMUX_TMP);
+                                        
+                                         break;}
+                default : break;
+                }
+        
 }
+    
     
 
 
