@@ -16,74 +16,95 @@
 
 CY_ISR(Custom_ISR_ADC)
 {
-    TIMER_ReadStatusRegister();  //per ora usiamo solo counter come variabile non più flag. Può tornare utile se riduciamo i 4ms
+    TIMER_ReadStatusRegister(); 
     
+    if (status != STATUS_OFF && counter < N_samples){
     
-    counter++;
-    
-     
-                switch (status){
-                
-                
-                case STATUS_ON_PHOTO: 
-                                        {sum_PHOTO += sample(AMUX_PHOTO); 
-                                        
-                                        
-                                        break;}
-                                        
-                                        
-                case STATUS_ON_TMP:     
-                                        {sum_TMP += sample(AMUX_TMP);
-                                        
-                                        break;}
-                                        
-                case STATUS_ON_BOTH:
-                                        {sum_PHOTO += sample(AMUX_PHOTO); 
-                                         sum_TMP += sample(AMUX_TMP);
-                                        
-                                         break;}
-                default : break;
-                }
+        counter++;
         
+            switch (status){
+            
+            
+            case STATUS_ON_PHOTO: 
+                                    {sum_PHOTO += sample(AMUX_PHOTO); 
+                                    
+                                    break;}
+                                    
+                                    
+            case STATUS_ON_TMP:     
+                                    {sum_TMP += sample(AMUX_TMP);
+                                    
+                                    break;}
+                                    
+            case STATUS_ON_BOTH:
+                                    {sum_PHOTO += sample(AMUX_PHOTO); 
+                                     sum_TMP += sample(AMUX_TMP);
+                                    
+                                    break;}
+            default : break;
+            }
+        
+    }
 }
-    
     
 
 
 void EZI2C_ISR_ExitCallback(void)
-{   //Everytime we get a new command from bridge control panel, we check if the values are ok
- 
-    status = (SlaveBuffer[0] & MASK);
+{   //Everytime we get a new command from bridge control panel
     
-    if (status != previous_status)  {
-        
-                                      //SlaveBuffer[0] = SAMPLES<<2 | status;      //mantengo lo status scelto, fisso 5 samples sempre
-                                      previous_status = status;  
+    //read the status
+    status = (SlaveBuffer[0] & MASK);
+    //read the Number of samples
+    N_samples = (SlaveBuffer[0] >> 2);
+    //read the period of the isr
+    period = SlaveBuffer[1];
+    
+ 
+    
+    //if the period has been changed, update it    
+    //NOTE that the clock is 2kHz, therefore we need to multiply by 2 the value written by the user
+    
+    if ( period != previous_period )    {
+                                        TIMER_WritePeriod((period*ms_to_count)-1);// setto il periodo nuovo (scelto dall'utente, o imposto se valori incompatibili)
+                                        
+                                        previous_period = period;
+                                        }
+    
+   
+    
+    //if the status has been changed, update it   
+    if ( status != previous_status )    {
+                                        previous_status = status;  
                                       
-                                      switch(status) {
+                                        switch(status) {
 
-                                      case STATUS_OFF:     {turn_off();          //if status bits are 00, we turn-off the system (LED, ADC, reset flag)
-                                                            break;}
-                                                            
+                                        case STATUS_OFF:     {  
+                                                                reset_flags();
+                                                                LED_Write(LED_OFF);  
+                                                                break;}
+                                                                
 
-                                      case STATUS_ON_BOTH: {turn_on ();
-                                                            LED_Write(LED_ON);
-                                                            break;}
-                                                            
-                                      case STATUS_ON_PHOTO:{turn_on ();
-                                                            LED_Write(LED_OFF);
-                                                            break;}
-                                    
-                                      case STATUS_ON_TMP:  {turn_on ();
-                                                            LED_Write(LED_OFF);
-                                                            break;}
-                                                            
-                                    
-                                      default :             break;
-                                      }
-                                    }
-    if (SlaveBuffer[1] != DEFAULT_PERIOD) SlaveBuffer[1] = DEFAULT_PERIOD;
-    if (SlaveBuffer[2] != WHO_AM_I)       SlaveBuffer[2] = WHO_AM_I;
+                                        case STATUS_ON_BOTH: {   
+                                                                reset_flags();
+                                                                LED_Write(LED_ON);
+                                                                break;}
+                                                                
+                                        case STATUS_ON_PHOTO:{  
+                                                                reset_flags();
+                                                                LED_Write(LED_OFF);
+                                                                break;}
+                                        
+                                        case STATUS_ON_TMP:  {  
+                                                                reset_flags();
+                                                                LED_Write(LED_OFF);
+                                                                break;}
+                                                                
+                                        
+                                        default :             break;
+                                          }
+                                        }
+    
+
   
 }
 /* [] END OF FILE */
