@@ -1,11 +1,13 @@
 /* ========================================
+ * 
+ * Group 10
+ *  
+ * File Name: cyapicallbacks.h
+ * 
+ * PSoC Creator  4.4
  *
- * Copyright YOUR COMPANY, THE YEAR
- * All Rights Reserved
- * UNPUBLISHED, LICENSED SOFTWARE.
- *
- * CONFIDENTIAL AND PROPRIETARY INFORMATION
- * WHICH IS THE PROPERTY OF your company.
+ * Description:
+ * It contains declarations of EZI2C_ISR_ExitCallback().
  *
  * ========================================
 */
@@ -13,8 +15,8 @@
 #define CYAPICALLBACKS_H
     
 
-    /*Define your macro callbacks here */
-    /*For more information, refer to the Writing Code topic in the PSoC Creator Help.*/
+    /*Definition of macro callback */
+    
     #define EZI2C_ISR_EXIT_CALLBACK
     
     void EZI2C_ISR_ExitCallback(void);
