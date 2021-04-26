@@ -32,7 +32,7 @@
  * ========================================
 */ 
 
-volatile uint8_t SlaveBuffer[SLAVE_BUFFER_SIZE];
+volatile uint8_t SlaveBuffer[SLAVE_BUFFER_SIZE]={0};
 
 /* 
    SLAVEBUFFER STRUCURE
@@ -80,13 +80,7 @@ int main(void)
     
     /* initialize SlaveBuffer registers */
     
-    SlaveBuffer[0] &= MASK_RESERVED;  /* initialize the buffer to 0, don't change the Reserved bits*/ 
-    SlaveBuffer[1] |= 0x00;
-    SlaveBuffer[2] |= WHO_AM_I;        /* 0xBC */
-    SlaveBuffer[3] |= 0x00;
-    SlaveBuffer[4] |= 0x00;
-    SlaveBuffer[5] |= 0x00;
-    SlaveBuffer[6] |= 0x00;
+    SlaveBuffer[2] = WHO_AM_I;        /* 0xBC */
     
     /* initialize flag */ 
     

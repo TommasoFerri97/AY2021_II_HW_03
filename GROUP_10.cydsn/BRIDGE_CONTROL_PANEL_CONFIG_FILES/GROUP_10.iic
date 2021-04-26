@@ -1,10 +1,11 @@
 ;GROUP 10
 
-;                  {N_SAMPL}  {STATUS}
-;CTRL_REG_0 [0 0    0 1 0 1     0 0]    = 0x14 ,5 samples and status bits 00 (OFF CONDITION)
-;CTRL_REG_0 [0 0    0 1 0 1     0 1]    = 0x15 ,5 samples and status bits 01 (TMP CHANNEL)  
-;CTRL_REG_0 [0 0    0 1 0 1     1 0]    = 0x16 ,5 samples and status bits 10 (LIGHT CHANNEL) 
-;CTRL_REG_0 [0 0    0 1 0 1     1 1]    = 0x17 ,5 samples and status bits 11 (BOTH CHANNELs) 
+;            {reserved}  {N_SAMPL}  {STATUS}
+;CTRL_REG_0 [   - -       0 1 0 1     0 0]    = 0x14 ,5 samples and status bits 00 (OFF CONDITION)
+;CTRL_REG_0 [   - -       0 1 0 1     0 1]    = 0x15 ,5 samples and status bits 01 (TMP CHANNEL)  
+;CTRL_REG_0 [   - -       0 1 0 1     1 0]    = 0x16 ,5 samples and status bits 10 (LIGHT CHANNEL) 
+;CTRL_REG_0 [   - -       0 1 0 1     1 1]    = 0x17 ,5 samples and status bits 11 (BOTH CHANNELs) 
+;writing reserved bits doesn't affect the computation at firmware level, their value is not taken into account
 
 ;=======================================================================================================================================================
 

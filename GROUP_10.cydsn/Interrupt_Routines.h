@@ -32,8 +32,7 @@
     
     #define MASK             0b00000011
     #define MASK_SAMPLES     0b00001111
-    #define MASK_RESERVED    0b11000000
-     
+        
     /*
     set up of  global variables;
     volatile: volatile tells the compiler that the variable value may be modified by some external event;
