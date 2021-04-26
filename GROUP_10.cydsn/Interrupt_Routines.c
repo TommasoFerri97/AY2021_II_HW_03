@@ -15,7 +15,7 @@
 /* 
  * ========================================
  *
- * include header files containing the needed functions' declations;
+ * include header files containing the needed functions' declarations;
  *
  * ========================================
 */ 
@@ -32,17 +32,20 @@
  * ========================================
 */ 
 
-CY_ISR(Custom_ISR_ADC) /* CY_ISR used to define the function declared with CY_ISR_PROTO*/
+CY_ISR(Custom_ISR_ADC) 
 {
+    /*Read the status register to clear the TC bit, and allow further TC-Interrupts */
     
     TIMER_ReadStatusRegister(); 
-    /*Returns the current state of the status register; the interrupt output remains asserted until the status register is read */
     
-    if (status != STATUS_OFF && counter < N_samples){ /* check of convertion conditions */
-       
-        counter++; /* counting goes on till N_samples */
+    /* check of convertion conditions */
+    
+    if (status != STATUS_OFF && counter < N_samples){ 
         
-        /* according to status sample the signals from my sensors */
+        /* counting goes on till N_samples */
+        counter++; 
+        
+        /* according to the status, sample the signals from the sensors */
             switch (status){
             
             
@@ -80,13 +83,13 @@ void EZI2C_ISR_ExitCallback(void) /* Everytime we get a new command from bridge 
     
 {   
     
-    /* read the status */
+    /* read the status : take only bit 0 and bit 1 of SlaveBuffer[0] */
     
-    status = (SlaveBuffer[0] & MASK); /* take only bit 0 and bit 1 of SlaveBuffer[0]*/
+    status = (SlaveBuffer[0] & MASK); 
     
-    /* read the Number of samples */ 
+    /* read the Number of samples :  two shifts to right to not consider status bits */ 
     
-    N_samples = (SlaveBuffer[0] >> 2) & MASK_SAMPLES; /* two shifts to right to not consider status bits */
+    N_samples = (SlaveBuffer[0] >> 2) & MASK_SAMPLES; 
     
     /* read the period of the ISR */
     
@@ -97,7 +100,15 @@ void EZI2C_ISR_ExitCallback(void) /* Everytime we get a new command from bridge 
     /* if the period has been changed, update it */   
     
     if ( period != previous_period )    {
+                                        TIMER_Stop();
+                                        
+                                        /*update period*/
                                         TIMER_WritePeriod((period*ms_to_count)-1);
+                                        
+                                        /*reload the counter*/
+                                        TIMER_WriteCounter((period*ms_to_count)-1);
+                                        
+                                        TIMER_Start();
                                         
                                         previous_period = period;
                                         }

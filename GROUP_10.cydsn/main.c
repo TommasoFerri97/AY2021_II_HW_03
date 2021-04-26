@@ -7,7 +7,7 @@
  * PSoC Creator  4.4
  *
  * Description:
- * It contains the code to initialize peripherals, to compute the average and write to the slave register
+ * It contains the code to initialize peripherals, to compute the average and write into the slavebuffer registers
  *
  * ========================================
 */
@@ -32,10 +32,10 @@
  * ========================================
 */ 
 
-volatile uint8_t SlaveBuffer[SLAVE_BUFFER_SIZE] = {0};
+volatile uint8_t SlaveBuffer[SLAVE_BUFFER_SIZE];
 
 /* 
-  STRUTTURA SLAVEBUFFER 
+   SLAVEBUFFER STRUCURE
 0x00	Control Reg 1	R/W
 0x01	Control Reg 2	R/W
 0x02	Who Am I	    R
@@ -62,7 +62,7 @@ int main(void)
     
     ADC_DelSig_Start(); 
     
-    /* TIMER init */
+    /* TIMER start */
     
     TIMER_Start();
     
@@ -78,16 +78,21 @@ int main(void)
     
     AMux_1_Start();
     
-    /* initialize SlaveBuffer R/W registers */
-       
-    SlaveBuffer[2] = WHO_AM_I;     /* 0xBC */
-       
+    /* initialize SlaveBuffer registers */
+    
+    SlaveBuffer[0] &= MASK_RESERVED;  /* initialize the buffer to 0, don't change the Reserved bits*/ 
+    SlaveBuffer[1] |= 0x00;
+    SlaveBuffer[2] |= WHO_AM_I;        /* 0xBC */
+    SlaveBuffer[3] |= 0x00;
+    SlaveBuffer[4] |= 0x00;
+    SlaveBuffer[5] |= 0x00;
+    SlaveBuffer[6] |= 0x00;
+    
     /* initialize flag */ 
     
     reset_flags();
     status = 0;
     previous_status = 0;
-    previous_N_samples = 0;
     period = SlaveBuffer[1]; 
     previous_period = period ;   
      

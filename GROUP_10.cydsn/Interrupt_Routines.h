@@ -32,6 +32,7 @@
     
     #define MASK             0b00000011
     #define MASK_SAMPLES     0b00001111
+    #define MASK_RESERVED    0b11000000
      
     /*
     set up of  global variables;
@@ -40,7 +41,7 @@
  
     volatile uint8_t counter;
     volatile uint8_t status,previous_status;
-    volatile uint8_t N_samples,previous_N_samples;
+    volatile uint8_t N_samples;
     volatile uint8_t period,previous_period;
     
     
