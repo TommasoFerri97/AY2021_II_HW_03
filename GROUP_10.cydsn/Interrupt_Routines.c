@@ -129,7 +129,11 @@ void EZI2C_ISR_ExitCallback(void) /* Everytime we get a new command from bridge 
     if ( status != previous_status )    {
                                         switch(status) {
 
-                                            case STATUS_OFF:     {  LED_Write(LED_OFF);  
+                                            case STATUS_OFF:     {  LED_Write(LED_OFF); 
+                                                                    SlaveBuffer[3] = 0;
+                                                                    SlaveBuffer[4] = 0;
+                                                                    SlaveBuffer[5] = 0;
+                                                                    SlaveBuffer[6] = 0;
                                                                     break;}
                                                                     
                                             case STATUS_ON_BOTH: {  /* if we sample both signals turn on the LED */ 
