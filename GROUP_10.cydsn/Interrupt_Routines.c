@@ -113,7 +113,7 @@ void EZI2C_ISR_ExitCallback(void) /* Everytime we get a new command from bridge 
                                         TIMER_WritePeriod((period*ms_to_count)-1);
                                         
                                         /*reload the counter*/
-                                        TIMER_WriteCounter((period*ms_to_count)-1);
+                                        TIMER_WriteCounter(0);
                                         
                                         TIMER_Start();
                                         
