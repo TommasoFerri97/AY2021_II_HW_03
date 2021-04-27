@@ -1,0 +1,58 @@
+;GROUP 10
+
+;            {reserved}  {N_SAMPL}  {STATUS}
+;CTRL_REG_0 [   - -       0 1 0 1     0 0]    = 0x14 ,5 samples and status bits 00 (OFF CONDITION)
+;CTRL_REG_0 [   - -       0 1 0 1     0 1]    = 0x15 ,5 samples and status bits 01 (TMP CHANNEL)  
+;CTRL_REG_0 [   - -       0 1 0 1     1 0]    = 0x16 ,5 samples and status bits 10 (LIGHT CHANNEL) 
+;CTRL_REG_0 [   - -       0 1 0 1     1 1]    = 0x17 ,5 samples and status bits 11 (BOTH CHANNELs) 
+;writing reserved bits doesn't affect the computation at firmware level, their value is not taken into account
+
+;=======================================================================================================================================================
+
+;SET THE SAMPLING PERIOD [1ms - 128ms] 
+
+;NOTES:
+;The timer clock is set to 2 khz with resolution 0.5 ms, but practically only integer values are selectable via CTRL_REG_1.
+;The firmware handles the convertion from ms to the correct compare value.
+;Period_ISR = 1/(Transmission_Rate * N_Samples) 
+;TR 50 HZ, 5 Samples --> Period_ISR = 1/(50*5) = 4 ms --> SET 4          
+
+w 08 01 04 p      
+
+;Check if the value has been correctly written
+
+w 08 01 p
+r 08 x p
+
+;========================================================================================================================================================
+
+;SET THE STATUS AND THE NUMBER OF SAMPLES TO BE AVERAGED  [0-15] 
+
+;Nominal: 5 samples, both channels
+
+w 08 00 17 p  
+
+;Check if the value has been correctly written
+
+w 08 00 p
+r 08 x p
+
+;========================================================================================================================================================
+
+;READ THE VALUES
+;We suggest setting the Scan period at 1/TRASMISSION_RATE [Nominal : 20ms]
+
+;READ BOTH TEMPERATURE AND LIGHT
+
+w 08 03 p
+r 08 @1TEMP @0TEMP @1LIGHT @0LIGHT p       ;repeat this line
+
+;READ ONLY TEMPERATURE
+
+w 08 03 p
+r 08 @1TEMP @0TEMP p                       ;repeat this line
+
+;READ ONLY LIGHT
+
+w 08 05 p
+r 08 @1LIGHT @0LIGHT p                     ;repeat this line

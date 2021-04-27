@@ -1,49 +1,64 @@
 /* ========================================
+ * 
+ * Group 10
+ *  
+ * File Name: I2C_Interface.c
+ * 
+ * PSoC Creator  4.4
  *
- * Copyright YOUR COMPANY, THE YEAR
- * All Rights Reserved
- * UNPUBLISHED, LICENSED SOFTWARE.
- *
- * CONFIDENTIAL AND PROPRIETARY INFORMATION
- * WHICH IS THE PROPERTY OF your company.
+ * Description:
+ * It contains the code to define the Sample function and the flag reset
  *
  * ========================================
 */
+
+/* 
+ * ========================================
+ *
+ * include header files containing the needed functions' declarations;
+ *
+ * ========================================
+*/ 
+
 #include "Interrupt_Routines.h"
 #include "I2C_Interface.h"
 
-void turn_off (){
-
-    ADC_DelSig_StopConvert();   //fermo campionamento
-
-    flag = 0;                   //resetto flag di conteggio byte
-    counter = 0;                //resetto flag di conteggio tempo
-    LED_Write(LED_OFF);         //spengo led
-    
-    // PHOTO and TMP Array non resettati, tanto verranno sovrascritti
-}
-void turn_on (){
-
-    ADC_DelSig_StartConvert();   //fermo campionamento
-
-    flag = 0;                    //resetto flag di conteggio byte
-    counter = 0;                 //resetto flag di conteggio tempo
-
-    
-    // PHOTO and TMP Array non resettati, tanto verranno sovrascritti
-}
+/* 
+ * ========================================
+ *
+ * sample() definition;
+ *
+ * ========================================
+*/ 
 
 int32_t sample(uint8_t AMUX) {
+        
+    AMux_1_FastSelect(AMUX);           /* switch sampling channel according to AMUX*/
+  
+    value_digit = ADC_DelSig_Read32(); /* sample the 16 bit value */
     
-    ADC_DelSig_StopConvert();
-    AMux_1_FastSelect(AMUX);
-    ADC_DelSig_StartConvert();
-    ADC_DelSig_Read32(); //trash
-    value_digit = ADC_DelSig_Read32();
     if(value_digit < 0) value_digit = 0;
     if(value_digit > 65535) value_digit = 65535 ;
     
-    return value_digit;
+    return value_digit;                /* return the sampled value */
+    
+    
+}
+
+/* 
+ * ========================================
+ *
+ * reset_flags() definition;
+ *
+ * ========================================
+*/ 
+
+void reset_flags(void){
+    
+    counter=0;
+    sum_PHOTO = 0;                     /* reset to avoid overwrite*/
+    sum_TMP = 0;
+
 }
     
 /* [] END OF FILE */

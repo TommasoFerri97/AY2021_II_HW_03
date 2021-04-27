@@ -1,89 +1,161 @@
 /* ========================================
+ * 
+ * Group 10
+ *  
+ * File Name: Interrupt_Routines.c
+ * 
+ * PSoC Creator  4.4
  *
- * Copyright YOUR COMPANY, THE YEAR
- * All Rights Reserved
- * UNPUBLISHED, LICENSED SOFTWARE.
- *
- * CONFIDENTIAL AND PROPRIETARY INFORMATION
- * WHICH IS THE PROPERTY OF your company.
+ * Description:
+ * It contains the code to handle ISR for data acquisition and EZI2C ExitCallBack
  *
  * ========================================
 */
+
+/* 
+ * ========================================
+ *
+ * include header files containing the needed functions' declarations;
+ *
+ * ========================================
+*/ 
+
 #include "Interrupt_Routines.h"
 #include "I2C_Interface.h"
 #include "cyapicallbacks.h"
 
+/* 
+ * ========================================
+ *
+ * Custom_ISR_ADC definition;
+ *
+ * ========================================
+*/ 
 
-CY_ISR(Custom_ISR_ADC)
+CY_ISR(Custom_ISR_ADC) 
 {
-    TIMER_ReadStatusRegister();  //per ora usiamo solo counter come variabile non più flag. Può tornare utile se riduciamo i 4ms
+    /*Read the status register to clear the TC bit, and allow further TC-Interrupts */
     
+    TIMER_ReadStatusRegister(); 
     
-    counter++;
+    /* check of convertion conditions */
     
-     
-                switch (status){
-                
-                
-                case STATUS_ON_PHOTO: 
-                                        {sum_PHOTO += sample(AMUX_PHOTO); 
-                                        
-                                        
-                                        break;}
-                                        
-                                        
-                case STATUS_ON_TMP:     
-                                        {sum_TMP += sample(AMUX_TMP);
-                                        
-                                        break;}
-                                        
-                case STATUS_ON_BOTH:
-                                        {sum_PHOTO += sample(AMUX_PHOTO); 
-                                         sum_TMP += sample(AMUX_TMP);
-                                        
-                                         break;}
-                default : break;
-                }
+    if (status != STATUS_OFF && counter < N_samples){ 
         
+        /* counting goes on till N_samples */
+        counter++; 
+        
+        /* according to the status, sample the signals from the sensors */
+            switch (status){
+            
+            
+            case STATUS_ON_PHOTO: 
+                                    {sum_PHOTO += sample(AMUX_PHOTO); 
+                                    
+                                    break;}
+                                    
+                                    
+            case STATUS_ON_TMP:     
+                                    {sum_TMP += sample(AMUX_TMP);
+                                    
+                                    break;}
+                                    
+            case STATUS_ON_BOTH:
+                                    {sum_PHOTO += sample(AMUX_PHOTO); 
+                                     sum_TMP += sample(AMUX_TMP);
+                                    
+                                    break;}
+            default : break;
+            }
+        
+    }
 }
     
+/* 
+ * ========================================
+ *
+ * EZI2C_ISR_ExitCallback() definition;
+ *
+ * ========================================
+*/ 
+
+void EZI2C_ISR_ExitCallback(void) /* Everytime we get a new command from bridge control panel we run these code lines*/
+    
+{   
+    
+    /* read the status : take only bit 0 and bit 1 of SlaveBuffer[0] */
+    
+    status = (SlaveBuffer[0] & MASK); 
+    
+    /* read the Number of samples :  two shifts to right to not consider status bits */ 
+    
+    N_samples = (SlaveBuffer[0] >> 2) & MASK_SAMPLES; 
+    
+    /* read the period [ms] of the ISR */
+    
+    period = SlaveBuffer[1];
+    
+    /* if the Number of samples has been changed, reset flags */ 
+    if ( N_samples != previous_N_samples )    {
+                                        
+                                                reset_flags();
+                                        
+                                                previous_N_samples = N_samples;
+                                        
+                                                }
+    
+    /* if the period has been changed, update it */   
+    
+    if ( period != previous_period )    {
+                                        TIMER_Stop();
+                                        
+                                        /*update period*/
+                                        TIMER_WritePeriod((period*ms_to_count)-1);
+                                        
+                                        /*reload the counter*/
+                                        TIMER_WriteCounter(0);
+                                        
+                                        TIMER_Start();
+                                        
+                                        reset_flags();
+                                        
+                                        previous_period = period;
+                                        }
+    
+   
+    
+    /* if the status has been changed, update it */
+    
+    if ( status != previous_status )    {
+                                        switch(status) {
+
+                                            case STATUS_OFF:     {  LED_Write(LED_OFF); 
+                                                                    SlaveBuffer[3] = 0;
+                                                                    SlaveBuffer[4] = 0;
+                                                                    SlaveBuffer[5] = 0;
+                                                                    SlaveBuffer[6] = 0;
+                                                                    break;}
+                                                                    
+                                            case STATUS_ON_BOTH: {  /* if we sample both signals turn on the LED */ 
+                                                                    LED_Write(LED_ON);
+                                                                    break;}
+                                                                    
+                                            case STATUS_ON_PHOTO:{  LED_Write(LED_OFF);
+                                                                    break;}
+                                            
+                                            case STATUS_ON_TMP:  {  LED_Write(LED_OFF);
+                                                                    break;}
+                                                                    
+                                            
+                                            default :             break;
+                                          }
+                                        
+                                        reset_flags();
+                                        
+                                        previous_status = status;  
+                                        }
     
 
-
-void EZI2C_ISR_ExitCallback(void)
-{   //Everytime we get a new command from bridge control panel, we check if the values are ok
- 
-    status = (SlaveBuffer[0] & MASK);
-    
-    if (status != previous_status)  {
-        
-                                      //SlaveBuffer[0] = SAMPLES<<2 | status;      //mantengo lo status scelto, fisso 5 samples sempre
-                                      previous_status = status;  
-                                      
-                                      switch(status) {
-
-                                      case STATUS_OFF:     {turn_off();          //if status bits are 00, we turn-off the system (LED, ADC, reset flag)
-                                                            break;}
-                                                            
-
-                                      case STATUS_ON_BOTH: {turn_on ();
-                                                            LED_Write(LED_ON);
-                                                            break;}
-                                                            
-                                      case STATUS_ON_PHOTO:{turn_on ();
-                                                            LED_Write(LED_OFF);
-                                                            break;}
-                                    
-                                      case STATUS_ON_TMP:  {turn_on ();
-                                                            LED_Write(LED_OFF);
-                                                            break;}
-                                                            
-                                    
-                                      default :             break;
-                                      }
-                                    }
-    if (SlaveBuffer[1] != DEFAULT_PERIOD) SlaveBuffer[1] = DEFAULT_PERIOD;
-    if (SlaveBuffer[2] != WHO_AM_I)       SlaveBuffer[2] = WHO_AM_I;
   
 }
 /* [] END OF FILE */

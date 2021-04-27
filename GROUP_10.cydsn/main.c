@@ -1,19 +1,42 @@
 /* ========================================
+ * 
+ * Group 10
+ *  
+ * File Name: main.c
+ * 
+ * PSoC Creator  4.4
  *
- * Copyright YOUR COMPANY, THE YEAR
- * All Rights Reserved
- * UNPUBLISHED, LICENSED SOFTWARE.
- *
- * CONFIDENTIAL AND PROPRIETARY INFORMATION
- * WHICH IS THE PROPERTY OF your company.
+ * Description:
+ * 
+ * It contains the code to initialize peripherals, to compute the average and write into the slavebuffer registers
  *
  * ========================================
 */
+
+/* 
+ * ========================================
+ *
+ * include header files containing the needed functions' declations;
+ *
+ * ========================================
+*/ 
+
 #include "project.h"
 #include "Interrupt_Routines.h"
 #include "I2C_Interface.h"
-#include "math.h"
-/*STRUTTURA SLAVEBUFFER 
+
+/* 
+ * ========================================
+ *
+ * variables definitions and initialization;
+ *
+ * ========================================
+*/ 
+
+volatile uint8_t SlaveBuffer[SLAVE_BUFFER_SIZE]={0};
+
+/* 
+   SLAVEBUFFER STRUCURE
 0x00	Control Reg 1	R/W
 0x01	Control Reg 2	R/W
 0x02	Who Am I	    R
@@ -23,69 +46,90 @@
 0x06	PHOTO Bit 07-0	R
 */
 
-volatile uint8_t SlaveBuffer[SLAVE_BUFFER_SIZE] = {0};
-
 uint16_t mean_PHOTO,mean_TMP;
-uint16_t R_PHOTO;
 
+/* 
+ * ========================================
+ *
+ * main code definition;
+ *
+ * ========================================
+*/ 
 
 int main(void)
 {
 
-    CyGlobalIntEnable; /* Enable global interrupts. */
-  
-    //timer init
+    /* ADC start */
+    
+    ADC_DelSig_Start(); 
+    
+    /* TIMER start */
+    
     TIMER_Start();
-    //ADC start
-    ADC_DelSig_Start();
-    //isr start
+    
+    /* ISR start */
+    
     isr_ADC_StartEx(Custom_ISR_ADC);
-    //I2C start
+    
+    /* I2C start */
+    
     EZI2C_Start ();
-    //MUX_init
+    
+    /* MUX_init */
+    
     AMux_1_Start();
     
-    //initialize slavebuffer values
+    /* initialize SlaveBuffer registers */
     
-    SlaveBuffer[0] = _5_SAMPLES_OFF;        // 5 samples are averaged and device is stopped DA CAMBIARE CON CONTROL PANEL
-    SlaveBuffer[1] = TIMER_ReadPeriod();     // Set period to 200 to get 4 ms
-    SlaveBuffer[2] = WHO_AM_I;               // 0xBC
+    SlaveBuffer[2] = WHO_AM_I;        /* 0xBC */
     
-    //initialize flag
-    flag = 0;
-    counter = 0;
-    status = (SlaveBuffer[0] & MASK);
-    previous_status = status;
-
-    // Set up EZI2C buffer
+    /* initialize flag */ 
+    
+    reset_flags();
+    
+    status = 0;
+    previous_status = 0;
+    
+    period = SlaveBuffer[1]; 
+    previous_period = period ;
+    
+    previous_N_samples = 0;
+    N_samples = 0;
+    /* Set up EZI2C Read only data bytes  */
+    
     EZI2C_SetBuffer1(SLAVE_BUFFER_SIZE, BUFFER_RW_AREA_SIZE ,SlaveBuffer);
-
+    
+    /* Enable global interrupts. */
+    
+    CyGlobalIntEnable; 
+    
     for(;;)
     
     {  
-       
-        if (counter == ITS_TIME_TO_SEND){
-                //sum_PHOTO =  ADC_DelSig_CountsTo_mVolts(sum_PHOTO); 
-                //sum_TMP =  ADC_DelSig_CountsTo_mVolts(sum_TMP);
-                /*R_PHOTO = (5000*10 - ((sum_PHOTO/SAMPLES)*10*5000)/131072)/((sum_PHOTO/SAMPLES)*5000)/131072;
-                mean_PHOTO = (pow(R_PHOTO,-10))/100.01 ; 
-                mean_PHOTO = (sum_PHOTO/SAMPLES)*5000/65536;
-                mean_TMP = (((sum_TMP/SAMPLES)*5000)/(65536)-500)/10;*/
+        
+        if ( counter == N_samples){
+
+                /* convert to mV the average of aquired data */
             
-                mean_PHOTO = sum_PHOTO/SAMPLES;
-                mean_TMP = sum_TMP/SAMPLES;
-                // byte SPLIT
-                SlaveBuffer[3] = mean_TMP >>8;
-                SlaveBuffer[4] = mean_TMP & 0xFF;
-                SlaveBuffer[5] = mean_PHOTO >>8;    //HBYTES
-                SlaveBuffer[6] = mean_PHOTO & 0xFF; //LBYTES
+                mean_PHOTO = ADC_DelSig_CountsTo_mVolts (sum_PHOTO/N_samples);
+                mean_TMP = ADC_DelSig_CountsTo_mVolts (sum_TMP/N_samples);
+            
+                /* byte SPLIT */
                 
-                flag=0;
-                counter=0;
-                sum_PHOTO = 0;
-                sum_TMP = 0;
-                mean_PHOTO = 0;
-                mean_TMP=0;
+                /* HBYTES */
+                
+                SlaveBuffer[3] = mean_TMP >>8;
+                SlaveBuffer[5] = mean_PHOTO >>8;
+                
+                /* LBYTES */ 
+                
+                SlaveBuffer[4] = mean_TMP & 0xFF;
+                SlaveBuffer[6] = mean_PHOTO & 0xFF;    
+                
+                /* reset flags to start a new cycle */
+                
+                reset_flags();
+             
         }
 
         
