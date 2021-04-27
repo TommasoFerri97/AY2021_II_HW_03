@@ -91,11 +91,18 @@ void EZI2C_ISR_ExitCallback(void) /* Everytime we get a new command from bridge 
     
     N_samples = (SlaveBuffer[0] >> 2) & MASK_SAMPLES; 
     
-    /* read the period of the ISR */
+    /* read the period [ms] of the ISR */
     
     period = SlaveBuffer[1];
     
- 
+    /* if the Number of samples has been changed, reset flags */ 
+    if ( N_samples != previous_N_samples )    {
+                                        
+                                                reset_flags();
+                                        
+                                                previous_N_samples = N_samples;
+                                        
+                                                }
     
     /* if the period has been changed, update it */   
     
@@ -110,6 +117,8 @@ void EZI2C_ISR_ExitCallback(void) /* Everytime we get a new command from bridge 
                                         
                                         TIMER_Start();
                                         
+                                        reset_flags();
+                                        
                                         previous_period = period;
                                         }
     
@@ -118,34 +127,28 @@ void EZI2C_ISR_ExitCallback(void) /* Everytime we get a new command from bridge 
     /* if the status has been changed, update it */
     
     if ( status != previous_status )    {
-                                        previous_status = status;  
-                                      
                                         switch(status) {
 
-                                        case STATUS_OFF:     {  
-                                                                reset_flags();
-                                                                LED_Write(LED_OFF);  
-                                                                break;}
-                                                                
-
-                                        case STATUS_ON_BOTH: {  /* if we sample both signals turn on the LED */ 
-                                                                reset_flags();
-                                                                LED_Write(LED_ON);
-                                                                break;}
-                                                                
-                                        case STATUS_ON_PHOTO:{  
-                                                                reset_flags();
-                                                                LED_Write(LED_OFF);
-                                                                break;}
-                                        
-                                        case STATUS_ON_TMP:  {  
-                                                                reset_flags();
-                                                                LED_Write(LED_OFF);
-                                                                break;}
-                                                                
-                                        
-                                        default :             break;
+                                            case STATUS_OFF:     {  LED_Write(LED_OFF);  
+                                                                    break;}
+                                                                    
+                                            case STATUS_ON_BOTH: {  /* if we sample both signals turn on the LED */ 
+                                                                    LED_Write(LED_ON);
+                                                                    break;}
+                                                                    
+                                            case STATUS_ON_PHOTO:{  LED_Write(LED_OFF);
+                                                                    break;}
+                                            
+                                            case STATUS_ON_TMP:  {  LED_Write(LED_OFF);
+                                                                    break;}
+                                                                    
+                                            
+                                            default :             break;
                                           }
+                                        
+                                        reset_flags();
+                                        
+                                        previous_status = status;  
                                         }
     
 

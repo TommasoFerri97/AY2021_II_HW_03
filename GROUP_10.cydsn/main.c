@@ -7,6 +7,7 @@
  * PSoC Creator  4.4
  *
  * Description:
+ * 
  * It contains the code to initialize peripherals, to compute the average and write into the slavebuffer registers
  *
  * ========================================
@@ -85,11 +86,15 @@ int main(void)
     /* initialize flag */ 
     
     reset_flags();
+    
     status = 0;
     previous_status = 0;
+    
     period = SlaveBuffer[1]; 
-    previous_period = period ;   
-     
+    previous_period = period ;
+    
+    previous_N_samples = 0;
+    N_samples = 0;
     /* Set up EZI2C Read only data bytes  */
     
     EZI2C_SetBuffer1(SLAVE_BUFFER_SIZE, BUFFER_RW_AREA_SIZE ,SlaveBuffer);

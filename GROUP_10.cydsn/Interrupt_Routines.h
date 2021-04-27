@@ -40,7 +40,7 @@
  
     volatile uint8_t counter;
     volatile uint8_t status,previous_status;
-    volatile uint8_t N_samples;
+    volatile uint8_t N_samples,previous_N_samples;
     volatile uint8_t period,previous_period;
     
     
