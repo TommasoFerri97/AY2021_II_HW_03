@@ -5,6 +5,7 @@
 ;CTRL_REG_0 [   - -       0 1 0 1     0 1]    = 0x15 ,5 samples and status bits 01 (TMP CHANNEL)  
 ;CTRL_REG_0 [   - -       0 1 0 1     1 0]    = 0x16 ,5 samples and status bits 10 (LIGHT CHANNEL) 
 ;CTRL_REG_0 [   - -       0 1 0 1     1 1]    = 0x17 ,5 samples and status bits 11 (BOTH CHANNELs) 
+
 ;writing reserved bits doesn't affect the computation at firmware level, their value is not taken into account
 
 ;=======================================================================================================================================================
@@ -40,7 +41,7 @@ r 08 x p
 ;========================================================================================================================================================
 
 ;READ THE VALUES
-;We suggest setting the Scan period at 1/TRASMISSION_RATE [Nominal : 20ms]
+;We suggest setting the Scan period at N_samples*Period_ISR [Nominal : 20ms]
 
 ;READ BOTH TEMPERATURE AND LIGHT
 
